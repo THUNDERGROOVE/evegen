@@ -1,0 +1,7 @@
+EXTRA_DIST = src/patch.h src/db.h patches
+bin_PROGRAMS = evegen
+evegen_SOURCES = src/main.cpp src/patch.cpp src/db.cpp
+evegen_CXXFLAGS = -Wall -pedantic -std=c++11 $(PYTHON_CPPFLAGS) @MYSQL_CFLAGS@
+evegen_LDFLAGS = -lpython2.7 @MYSQL_LDFLAGS@
+evegen_LIBS = @MYSQL_LIBS@
+
