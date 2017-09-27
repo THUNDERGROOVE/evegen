@@ -6,6 +6,7 @@
 #include <vector>
 #include <uchar.h>
 
+// Structure for passing patch info between calls
 struct Patch {
     char *class_name;
     char *method_name;
@@ -17,6 +18,7 @@ struct Patch {
     size_t bytecode_size;
 };
 
+// LoadPatches will load all patches from a given directory
 std::vector<Patch *> LoadPatches(const char *patch_dir);
 
 #endif

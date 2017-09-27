@@ -1,18 +1,21 @@
 #include "patch.h"
-#include <marshal.h>
 
+#include <marshal.h>
 #include <dirent.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
 #include <string>
 #include <sstream>
 #include <vector>
 #include <iterator>
 
+// TODO: The parsing in here is gross
 
+// Small template for assiting string spliting
 template<typename out>
 void split(const std::string &s, char delim, out result) {
     std::stringstream ss;
