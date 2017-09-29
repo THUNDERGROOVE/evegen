@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "patch.h"
+#include "devtools.h"
 #include "config.h"
 #include "db.h"
 
@@ -12,18 +13,29 @@ bool do_patch = false;
 char *username = NULL;
 char *password = NULL;
 char *db = NULL;
-
-// TODO: Add devtools OHBOY
+char *devtools_in = NULL;
 
 static void print_help() {
     printf("%s - %s\n", PACKAGE, PACKAGE_VERSION);
     printf("    -dev  : outputs devtools.raw\n");
+    printf("          : optionally supply <devtools file>\n");
     printf("    -patch: applies patches instead of doing a dry run\n");
+    printf("          : supply <username> <password> <db>\n");
 }
 
 int main(int argc, char **argv) {
+    if (argc == 1) {
+        print_help();
+        return 0;
+    }
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], "-dev") == 0) {
+            if (argc > i + 1) {
+                char *devtools_name = argv[i + 1];
+                if (*devtools_name != '-') {
+                    devtools_in = argv[i + 1];
+                }
+            }
             do_devtools = true;
         }
         if (strcmp(argv[i], "-patch") == 0) {
@@ -46,17 +58,24 @@ int main(int argc, char **argv) {
 
     Py_Initialize();
 
-    std::vector<Patch *> patches = LoadPatches("patches");
-    printf(" OK | Loaded %lu patches\n", patches.size());
-
     if (do_patch) {
+        std::vector<Patch *> patches = LoadPatches("patches");
+        printf(" OK | Loaded %lu patches\n", patches.size());
         DBInit(username, password, db);
         DBCleanLiveupdates();
         printf(" > Applying patches\n");
-        for (int i = 0; i < patches.size(); i++) {
+        for (uint32_t i = 0; i < patches.size(); i++) {
             Patch *p = patches[i];
             printf(" %d/%lu: %s\n", i + 1, patches.size(), p->name);
             DBApplyPatch(p, i);
+        }
+    }
+
+    if (do_devtools) {
+        if (devtools_in != NULL) {
+            MakeDevtools(devtools_in);
+        } else {
+            MakeDevtools("devtools.py");
         }
     }
 

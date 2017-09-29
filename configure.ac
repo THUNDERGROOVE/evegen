@@ -1,5 +1,5 @@
 #AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS], [TAR-NAME], [URL])
-AC_INIT([evegen], [0.0.1], [nick@maximumtwang.com], [evegen], [http://www.maximumtwang.com])
+AC_INIT([evegen], [0.1.0], [nick@maximumtwang.com], [evegen], [http://www.maximumtwang.com])
 
 # Force autoconf to be at least this version number.
 AC_PREREQ([2.68])
@@ -26,6 +26,7 @@ AC_CONFIG_FILES([Makefile])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_SRCDIR([src/patch.cpp])
 AC_CONFIG_SRCDIR([src/db.cpp])
+AC_CONFIG_SRCDIR([src/devtools.cpp])
 
 # Put configuration results in this file for us to #include in our program.
 AC_CONFIG_HEADERS([config.h])
