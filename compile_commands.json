@@ -35,11 +35,11 @@
             "-g", 
             "-O2", 
             "-o", 
-            "src/evegen-main.o", 
-            "src/main.cpp"
+            "src/evegen-patch.o", 
+            "src/patch.cpp"
         ], 
         "directory": "/home/nick/evegen", 
-        "file": "src/main.cpp"
+        "file": "src/patch.cpp"
     }, 
     {
         "arguments": [
@@ -56,10 +56,31 @@
             "-g", 
             "-O2", 
             "-o", 
-            "src/evegen-patch.o", 
-            "src/patch.cpp"
+            "src/evegen-devtools.o", 
+            "src/devtools.cpp"
         ], 
         "directory": "/home/nick/evegen", 
-        "file": "src/patch.cpp"
+        "file": "src/devtools.cpp"
+    }, 
+    {
+        "arguments": [
+            "c++", 
+            "-c", 
+            "-DHAVE_CONFIG_H", 
+            "-I.", 
+            "-Wall", 
+            "-pedantic", 
+            "-std=c++11", 
+            "-I/usr/include/python2.7", 
+            "-I/usr/include/mysql", 
+            "-I/usr/include/mysql/..", 
+            "-g", 
+            "-O2", 
+            "-o", 
+            "src/evegen-main.o", 
+            "src/main.cpp"
+        ], 
+        "directory": "/home/nick/evegen", 
+        "file": "src/main.cpp"
     }
 ]
