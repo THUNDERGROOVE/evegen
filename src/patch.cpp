@@ -13,6 +13,9 @@
 #include <vector>
 #include <iterator>
 
+#define STB_C_LEXER_IMPLEMENTATION
+#include "stb_c_lexer.h"
+
 // TODO: The parsing in here is gross
 
 // Small template for assiting string spliting
@@ -32,79 +35,9 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return elems;
 }
 
-static void eat_spaces(std::string s, int *i) {
-    while (s[*i] == ' ' || s[*i] == '\r' || s[*i] == '\n') {
-        (*i)++;
-    }
-}
-
-static std::string eat_ident(std::string s, int *i) {
-    int start = *i;
-    while (isalpha(s[*i])) {
-        (*i)++;
-    }
-    return std::string(s.c_str()+start, *i - start);
-}
-
-// TODO: Error prone
-static std::string eat_quote_str(std::string s, int *i) {
-    if (s[*i] != '"') {
-        printf(" ERROR | Start quote not found at start of eat_quote_str\n");
-        printf("       | Got '%c' at %d\n", s[*i], *i);
-        exit(-1);
-        return std::string("");
-    }
-
-    (*i)++;
-
-
-    int start = *i;
-    while (s[*i] != '"') {
-        (*i)++;
-    }
-
-    std::string out(s.c_str() + start, *i - start);
-    if (s[*i] != '"') {
-        printf(" ERROR | End quote not found at start of eat_quote_str\n");
-        return std::string("");
-    }
-    (*i)++;
-
-    return out;
-}
-
-// Parses a statement like ("something", "else", "and")
-static std::vector<std::string> parse_arguments(std::string s, int *i, bool *ok) {
-    std::vector<std::string> out;
-
-    eat_spaces(s, i);
-    if (s[*i] != '(') {
-        printf(" ERROR | Expected a '('\n");
-        *ok = false;
-        return out;
-    }
-    (*i)++;
-
-    while (s[*i] != ')') {
-        std::string n = eat_quote_str(s, i);
-        out.push_back(n);
-        eat_spaces(s, i);
-        if (s[*i] == ',') {
-            (*i)++;
-        }
-        eat_spaces(s, i);
-    }
-    (*i)++;
-
-    return out;
-}
-
-static void print_additional_info(int i) {
-    printf(" Error occured at %d\n", i);
-}
-
 Patch *CreatePatch(const char *filename) {
     Patch *p = (Patch *)calloc(1, sizeof(Patch));
+    stb_lexer lex;
 
     FILE *f = fopen(filename, "r");
     fseek(f, 0, SEEK_END);
@@ -117,40 +50,65 @@ Patch *CreatePatch(const char *filename) {
         printf(" WARN | File read smaller than file size???\n");
     }
 
+
     std::string patch(data);
     std::vector<std::string> lines = split(data, '\n');
-    std::string deco = lines[0];
-    int i = 0;
-    eat_spaces(deco, &i);
-    if (deco[i] != '#') {
-        printf(" ERROR | First line of a patch must contain a comment\n");
-        print_additional_info(i);
-        return NULL;
-    }
-    i++;
-    eat_spaces(deco, &i);
-    if (deco[i] != '@') {
-        printf(" ERROR | Comment must begin with '@'\n");
-        print_additional_info(i);
-        return NULL;
-    }
-    i++;
+    std::string deco("");
 
-    std::string t = eat_ident(deco, &i);
-    if (t != "liveupdate") {
-        printf(" ERROR | Unknown patch type: %s\n", t.c_str());
+    for (uint32_t i = 0; i < lines.size(); i++) {
+        std::string line = lines[i];
+        if (line.size() > 1) {
+            if (line[0] == '#' &&
+                line[1] == '@') {
+                deco = std::string(&line.c_str()[1]);
+            }
+        }
+    }
+
+    if (deco.size() <= 0) {
+        printf(" ERROR | No decorator found\n");
         return NULL;
     }
 
-    bool ok = true;
-    std::vector<std::string> args = parse_arguments(deco, &i, &ok);
-    if (!ok) {
+    stb_c_lexer_init(&lex, deco.c_str(), deco.c_str() + deco.size(),
+                     (char *)malloc(0x10000), 0x10000);
+    stb_c_lexer_get_token(&lex);
+
+    if (lex.token != '@') {
+        printf(" ERROR | Expected '@' but got something else\n");
         return NULL;
     }
 
-    if (args.size() != 3) {
-        printf(" ERROR | liveupdate deco expects 3 arguments\n");
+    stb_c_lexer_get_token(&lex);
+
+    if (lex.token != CLEX_id) {
+        printf(" ERROR | Unexpected token\n");
         return NULL;
+    }
+
+    if (strcmp(lex.string, "liveupdate") != 0) {
+        printf(" ERROR | Unexpected identifier\n");
+        return NULL;
+    }
+
+    stb_c_lexer_get_token(&lex);
+    if (lex.token != '(') {
+        printf(" ERROR | Expected '(' but got something else\n");
+        return NULL;
+    }
+
+    std::vector<std::string> args;
+    while (true) {
+        stb_c_lexer_get_token(&lex);
+        if (lex.token == CLEX_dqstring) {
+            args.push_back(std::string(lex.string));
+        }
+        if (lex.token == ',') {
+            continue;
+        }
+        if (lex.token == ')') {
+            break;
+        }
     }
 
     p->data = data;

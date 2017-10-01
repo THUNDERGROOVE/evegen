@@ -10,6 +10,7 @@
 
 bool do_devtools = false;
 bool do_patch = false;
+bool do_test = true;
 char *username = NULL;
 char *password = NULL;
 char *db = NULL;
@@ -38,6 +39,9 @@ int main(int argc, char **argv) {
             }
             do_devtools = true;
         }
+        if (strcmp(argv[i], "-test") == 0) {
+            do_test = true;
+        }
         if (strcmp(argv[i], "-patch") == 0) {
             if (argc < i + 3) {
                 printf("-patch expects <username> <password> <db>\n");
@@ -57,6 +61,9 @@ int main(int argc, char **argv) {
     }
 
     Py_Initialize();
+    if (do_test) {
+        std::vector<Patch *> patches = LoadPatches("patches");
+    }
 
     if (do_patch) {
         std::vector<Patch *> patches = LoadPatches("patches");
