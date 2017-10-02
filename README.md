@@ -68,6 +68,49 @@ It requires two arguments as follows
 
 The description is only in the DB, and afaik isn't even sent to the client.
 
+## Devtools
+
+Unlike patches, devtools adds new code to the client.  In some spots in the client, it expects certain code to exist in the client which normally doesn't if you have specific roles.
+
+This can break various things if you're missing said code.
+
+A main devtools files expects a `Bootstrap` function that accepts two arguments.
+
+```
+def Bootstrap(a, b):
+    ...
+```
+
+Inside, you can do pretty much anything you want.  Any code in the Bootstrap function will run.
+
+The only main requirement is that you set the `a.Loader` to a compiled function like so
+
+```
+script = "def hello():\n\tprint('Hello World')"
+code = compile(script, '<script>', 'exec')
+data = marshal.dumps(code)
+exec marshal.loads(data) in None, None
+a.Loader = hello
+```
+
+If you don't do it this way, things get pretty fucky.
+
+Anything used in the Bootstrap function *MUST* be imported in the functions scope.
+
+Any instance of `'hexex::filename.py'` will replace the string with a hex encoded representation of the bytecode.
+
+You can then create a new module with `imp` and dump the code straight into the modules `.__dict__` attribute.
+
+After that is done, you will want to add it to nasty's named object table so it will take into effect globally.  This whole process looks something like this.
+
+```
+newclass = "hexex::newclass.py"
+code = marshal.loads(newclass.decode("hex"))
+NewModule = imp.new_module("NewModule")
+exec code in NewModule.__dict, None
+nast.nast.RegisterNamedObject(NewModule.NewClass, "form", "NewClass", "devtools.py", globals())
+```
+
 ## Notes
 
 Sometimes, due to the way scoping turns out, you can't use any imports already imported into the file or sometimes even builtins added by the client.
