@@ -113,7 +113,6 @@ Patch *CreatePatch(const char *filename) {
         if (line.size() > 1) {
             if (line[0] == '#' &&
                 line[1] == '@') {
-                printf("Found deco %s at line %d\n", line.c_str(), i);
                 decos.push_back(std::string(&line.c_str()[1]));
             }
         }
