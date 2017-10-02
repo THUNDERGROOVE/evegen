@@ -6,7 +6,9 @@ Utility to generate liveupdates and devtools.raw for evemu.
 
 Check the [releases](https://github.com/THUNDERGROOVE/evegen/releases/)
 
-`./configure
+`
+./configure
+
 make
 `
 
