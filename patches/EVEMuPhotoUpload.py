@@ -1,4 +1,5 @@
 #@liveupdate("globalClassMethod", "uicls.CharacterCreationLayer::CharacterCreationLayer", "AskForPortraitConfirmation")
+#@patchinfo("AskForPortraitConfirmation", "Patch to fix photo uploads on char creation")
 def AskForPortraitConfirmation(self, *args):
     photo = self.GetActivePortrait()
     snapPath = self.GetPortraitSnapshotPath(self.activePortraitIndex)

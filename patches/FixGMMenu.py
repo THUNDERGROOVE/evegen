@@ -1,4 +1,5 @@
 #@liveupdate("globalClassMethod", "svc.menu::MenuSvc", "GetGMMenu")
+#@patchinfo("GetGMMenu", "Various fixes to the right click GM menu")
 def GetGMMenu(self, itemID = None, slimItem = None, charID = None, invItem = None, mapItem = None):
 
     def startConsole():

@@ -1,4 +1,5 @@
 #@liveupdate("globalClassMethod", "form.LSCChannel::Channel", "InputKeyUp")
+#@patchinfo("InputKeyUp", "Allow / in chat without svc_slash")
 def InputKeyUp(self, *args):
     import blue
     shift = uicore.uilib.Key(uiconst.VK_SHIFT)

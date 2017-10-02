@@ -6,7 +6,8 @@
 
 // WIP may never finish
 bool MakeDevtoolsNoScript(const char *devtools_file) {
-    PyObject *main = PyImport_AddModule("__main__");
+    //PyObject *main = PyImport_AddModule("__main__");
+    
     PyObject *globals = PyDict_New();
     PyObject *locals = PyDict_New();
     FILE *f = fopen(devtools_file, "r");
@@ -18,14 +19,14 @@ bool MakeDevtoolsNoScript(const char *devtools_file) {
     PyRun_FileExFlags(f, devtools_file, Py_file_input,
                       globals, locals, true, NULL);
 
-    int k = 0;
 
     PyObject *bootstrap = PyDict_GetItemString(locals, "Bootstrap");
     PyObject *func_code = PyObject_GetAttrString(bootstrap, "func_code");
     PyObject *co_consts_tuple = PyObject_GetAttrString(func_code, "co_consts");
 
     Py_ssize_t size = PyTuple_Size(co_consts_tuple);
-    PyObject *co_consts = PyList_New(size);
+    size = 0;
+    //PyObject *co_consts = PyList_New(size);
 
     return true;
 }

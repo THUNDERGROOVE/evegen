@@ -13,6 +13,7 @@ struct Patch {
     char *func_name;
     char *type;
     char *name;
+    char *desc;
     char *data;
     char *bytecode;
     size_t bytecode_size;

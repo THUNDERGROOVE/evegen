@@ -31,7 +31,7 @@ bool DBInit(const char *username, const char *password, const char *db) {
     return true;
 }
 
-char *insert_statement = R"(
+const char *insert_statement = R"(
 INSERT liveupdates SET
 updateID=%d, updateName='%s', description='%s',
 machoVersionMin=%d, machoVersionMax=%d,
