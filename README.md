@@ -2,6 +2,16 @@
 
 Utility to generate liveupdates and devtools.raw for evemu.
 
+## Getting it
+
+Check the [releases](https://github.com/THUNDERGROOVE/evegen/releases/)
+
+`./configure
+make
+`
+
+I wouldn't recommend `make install` without a prefix.
+
 ## argument info
 
 Generate a devtools.raw file
