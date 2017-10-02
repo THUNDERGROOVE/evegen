@@ -10,7 +10,9 @@
 
 bool do_devtools = false;
 bool do_patch = false;
-bool do_test = true;
+bool do_test = false;
+bool do_raw = false;
+
 char *username = NULL;
 char *password = NULL;
 char *db = NULL;
@@ -53,6 +55,9 @@ int main(int argc, char **argv) {
             }
             do_patch = true;
         }
+        if (strcmp(argv[i], "-raw") == 0) {
+            do_raw = true;
+        }
         if (strcmp(argv[i], "--help") == 0 ||
             strcmp(argv[i], "-h") == 0) {
             print_help();
@@ -63,6 +68,19 @@ int main(int argc, char **argv) {
     Py_Initialize();
     if (do_test) {
         std::vector<Patch *> patches = LoadPatches("patches");
+        PatchFile pf;
+        LoadRawPatchFile(&pf, "updates.lu");
+        for (uint32_t i = 0; i < pf.patch_count; i++) {
+        printf("===================\n");
+            Patch *p = &pf.patches[i];
+            printf("class: %s\n", p->class_name);
+            printf("method: %s\n", p->method_name);
+            printf("func: %s\n", p->func_name);
+            printf("type: %s\n", p->type);
+            printf("name: %s\n", p->name);
+            printf("desc: %s\n", p->desc);
+            printf("bytecode size: %u\n", p->bytecode_size);
+        }
     }
 
     if (do_patch) {
@@ -76,6 +94,12 @@ int main(int argc, char **argv) {
             printf(" %d/%lu: %s\n", i + 1, patches.size(), p->name);
             DBApplyPatch(p, i);
         }
+    }
+
+    if (do_raw) {
+        std::vector<Patch *> patches = LoadPatches("patches");
+        DumpRawPatchFile(patches, "updates.lu");
+        printf(" OK | Dumped %d types to updates.lu\n", patches.size());
     }
 
     if (do_devtools) {

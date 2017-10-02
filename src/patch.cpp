@@ -16,8 +16,6 @@
 #define STB_C_LEXER_IMPLEMENTATION
 #include "stb_c_lexer.h"
 
-// TODO: The parsing in here is gross
-
 // Small template for assiting string spliting
 template<typename out>
 void split(const std::string &s, char delim, out result) {
@@ -35,6 +33,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return elems;
 }
 
+// This parses the liveupdate deco after the liveupdate decorator
 static bool ParseLiveupdate(stb_lexer *lex, Patch *p) {
     stb_c_lexer_get_token(lex);
     if (lex->token != '(') {
@@ -62,6 +61,7 @@ static bool ParseLiveupdate(stb_lexer *lex, Patch *p) {
     return true;
 }
 
+// This parses the patchinfo decorator after the patchinfo identifier
 static bool ParseInfo(stb_lexer *lex, Patch *p) {
     stb_c_lexer_get_token(lex);
     if (lex->token != '(') {
@@ -86,6 +86,7 @@ static bool ParseInfo(stb_lexer *lex, Patch *p) {
     return true;
 }
 
+// CreatePatch returns a Patch pointer given a filename to the patch file
 Patch *CreatePatch(const char *filename) {
     Patch *p = (Patch *)calloc(1, sizeof(Patch));
     stb_lexer lex;
@@ -173,8 +174,8 @@ Patch *CreatePatch(const char *filename) {
     return p;
 }
 
+// PreProceessPatch does the bytecode compilation for the given patch
 bool PreProcessPatch(Patch *p) {
-    //PyObject *code = Py_CompileStringFlags(p->data, p->name, Py_file_input, NULL);
     PyErr_Clear();
     PyObject *code = PyImport_AddModule("__main__");
     int ret = PyRun_SimpleString(p->data);
@@ -215,6 +216,7 @@ bool PreProcessPatch(Patch *p) {
     return true;
 }
 
+// LoadPatches returns a list of valid patches given a directory
 std::vector<Patch *> LoadPatches(const char *patch_dir) {
     DIR *dir = opendir(patch_dir);
     dirent *pent = NULL;
@@ -241,3 +243,73 @@ std::vector<Patch *> LoadPatches(const char *patch_dir) {
     }
     return patches;
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+
+bool LoadRawPatchFile(PatchFile *pf, const char *filename) {
+    FILE *f = fopen(filename, "rb");
+    fread(pf->magic,       sizeof(char),     4, f);
+    fread(&pf->patch_count, sizeof(uint32_t), 1, f);
+
+    pf->patches = (Patch *)calloc(sizeof(Patch), pf->patch_count);
+
+    for (uint32_t i = 0; i < pf->patch_count; i++) {
+        Patch *p = &pf->patches[i];
+        fread(p, sizeof(uint32_t), 7, f);
+
+        p->class_name = (char *)calloc(1, p->class_name_size + 1);
+        p->func_name = (char *)calloc(1, p->func_name_size + 1);
+        p->method_name = (char *)calloc(1, p->method_name_size + 1);
+        p->type = (char *)calloc(1, p->type_size + 1);
+        p->name = (char *)calloc(1, p->name_size + 1);
+        p->desc = (char *)calloc(1, p->desc_size + 1);
+        p->bytecode = (char *)calloc(1, p->bytecode_size + 1);
+
+        fread(p->class_name,  sizeof(char), p->class_name_size, f);
+        fread(p->method_name, sizeof(char), p->method_name_size, f);
+        fread(p->func_name,   sizeof(char), p->func_name_size, f);
+        fread(p->type,        sizeof(char), p->type_size, f);
+        fread(p->name,        sizeof(char), p->name_size, f);
+        fread(p->desc,        sizeof(char), p->desc_size, f);
+        fread(p->bytecode,    sizeof(char), p->bytecode_size, f);
+    }
+    return true;
+}
+
+bool DumpRawPatchFile(std::vector<Patch *> patches, const char *filename) {
+    FILE *f = fopen(filename, "wb");
+    if (f == NULL) {
+        return false;
+    }
+
+    uint32_t c = patches.size();
+
+    fwrite(LIVEUPDATEMAGIC, strlen(LIVEUPDATEMAGIC), 1, f);
+    fwrite(&c, sizeof(uint32_t), 1, f);
+
+    for (uint32_t i = 0; i < c; i++) {
+        Patch *p = patches[i];
+
+        p->class_name_size = strlen(p->class_name);
+        p->method_name_size = strlen(p->method_name);
+        p->func_name_size = strlen(p->func_name);
+        p->type_size = strlen(p->type);
+        p->name_size = strlen(p->name);
+        p->desc_size = strlen(p->desc);
+
+        // Write the first 7 entries containing the sizes of all of the strings
+        fwrite(p,              sizeof(uint32_t), 7, f);
+        fwrite(p->class_name,  sizeof(char), p->class_name_size, f);
+        fwrite(p->method_name, sizeof(char), p->method_name_size, f);
+        fwrite(p->func_name,   sizeof(char), p->func_name_size, f);
+        fwrite(p->type,        sizeof(char), p->type_size, f);
+        fwrite(p->name,        sizeof(char), p->name_size, f);
+        fwrite(p->desc,        sizeof(char), p->desc_size, f);
+        fwrite(p->bytecode,    sizeof(char), p->bytecode_size, f);
+    }
+
+    return true;
+}
+
+#pragma GCC diagnostic pop

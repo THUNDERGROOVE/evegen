@@ -14,10 +14,10 @@
             "-g", 
             "-O2", 
             "-o", 
-            "src/evegen-patch.o", 
-            "src/patch.cpp"
+            "src/evegen-main.o", 
+            "src/main.cpp"
         ], 
         "directory": "/home/nick/evegen", 
-        "file": "src/patch.cpp"
+        "file": "src/main.cpp"
     }
 ]
