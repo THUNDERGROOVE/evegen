@@ -69,9 +69,15 @@ int main(int argc, char **argv) {
     if (do_test) {
         std::vector<Patch *> patches = LoadPatches("patches");
         PatchFile pf;
-        LoadRawPatchFile(&pf, "updates.lu");
+        
+        PatchError err = LoadRawPatchFile(&pf, "updates.lu");
+        if (err.err != patch_ok) {
+            printf("ERROR :%s\n", PatchErrorString(err));
+            printf("%d\n", err.line);
+            return 0;
+        }
         for (uint32_t i = 0; i < pf.patch_count; i++) {
-        printf("===================\n");
+            printf("===================\n");
             Patch *p = &pf.patches[i];
             printf("class: %s\n", p->class_name);
             printf("method: %s\n", p->method_name);
@@ -98,7 +104,11 @@ int main(int argc, char **argv) {
 
     if (do_raw) {
         std::vector<Patch *> patches = LoadPatches("patches");
-        DumpRawPatchFile(patches, "updates.lu");
+        PatchError err = DumpRawPatchFile(patches, "updates.lu");
+        if (err.err != patch_ok) {
+            printf("Error dumping patch file: %s\n", PatchErrorString(err));
+            printf("At line %u\n", err.line);
+        }
         printf(" OK | Dumped %d types to updates.lu\n", patches.size());
     }
 

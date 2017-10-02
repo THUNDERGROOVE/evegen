@@ -37,7 +37,28 @@ struct PatchFile {
 // LoadPatches will load all patches from a given directory
 std::vector<Patch *> LoadPatches(const char *patch_dir);
 
-bool DumpRawPatchFile(std::vector<Patch *> patches, const char *filename);
-bool LoadRawPatchFile(PatchFile *pf, const char *filename);
+enum PatchError_ {
+    __patch_null,
+    patch_ok,
+    patch_invalid_magic,
+    patch_file_too_small,
+    patch_file_error,
+};
+
+struct PatchError {
+    uint32_t line;
+    PatchError_ err;
+};
+
+#define MAKE_PATCH_ERROR(__error) {        \
+        PatchError e;                      \
+        e.line = __LINE__;                 \
+        e.err = __error;                   \
+        return e;                          \
+    }
+
+const char *PatchErrorString(PatchError p);
+PatchError DumpRawPatchFile(std::vector<Patch *> patches, const char *filename);
+PatchError LoadRawPatchFile(PatchFile *pf, const char *filename);
 
 #endif

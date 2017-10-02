@@ -247,16 +247,72 @@ std::vector<Patch *> LoadPatches(const char *patch_dir) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
 
-bool LoadRawPatchFile(PatchFile *pf, const char *filename) {
+const char *PatchErrorString(PatchError pe) {
+    PatchError_ p = pe.err;
+    switch (p) {
+    case patch_ok: {
+        return "OK";
+    } break;
+    case patch_invalid_magic: {
+        return "Invalid magic in raw liveupdate file";
+    } break;
+    case patch_file_too_small: {
+        return "Patch file too small.  We wanted to read more than existed";
+    } break;
+    case patch_file_error: {
+        return "Generic file error while writing";
+    } break;
+    case __patch_null: {
+    } // fallthrough
+    default: {
+        return "<PROGRAMMER ERROR>";
+    }
+    }
+    return NULL;
+}
+
+#define strlen_write_size(dest) { \
+    dest ## _size = strlen(dest); \
+    }
+
+#define fwrite_string_check(dest) {                     \
+        if(fwrite(dest, sizeof(char), dest ## _size, f) \
+           < dest ## _size) {                           \
+            MAKE_PATCH_ERROR(patch_file_error);         \
+        }                                               \
+    }
+
+
+#define fread_string_check(dest) {                                      \
+        uint32_t s = fread(dest, sizeof(char), dest ## _size, f);       \
+        if (s < dest ## _size) {                                        \
+            printf("%u < %u\n", s, dest ## _size);                      \
+            MAKE_PATCH_ERROR(patch_file_too_small);                     \
+        }                                                               \
+    }                                                                   \
+
+PatchError LoadRawPatchFile(PatchFile *pf, const char *filename) {
     FILE *f = fopen(filename, "rb");
-    fread(pf->magic,       sizeof(char),     4, f);
-    fread(&pf->patch_count, sizeof(uint32_t), 1, f);
+    if (fread(pf->magic,       sizeof(char),     4, f) < 4) {
+        MAKE_PATCH_ERROR(patch_file_too_small);
+    }
+
+    if (strncmp(pf->magic, LIVEUPDATEMAGIC, 4) != 0) {
+        MAKE_PATCH_ERROR(patch_invalid_magic);
+    }
+    
+    size_t count_read = fread(&pf->patch_count, 1, sizeof(uint32_t), f);
+    if (count_read < sizeof(uint32_t)) {
+        MAKE_PATCH_ERROR(patch_file_too_small);
+    }
 
     pf->patches = (Patch *)calloc(sizeof(Patch), pf->patch_count);
 
     for (uint32_t i = 0; i < pf->patch_count; i++) {
         Patch *p = &pf->patches[i];
-        fread(p, sizeof(uint32_t), 7, f);
+        if (fread(p, sizeof(uint32_t), 7, f) < 7) {
+            MAKE_PATCH_ERROR(patch_file_too_small);
+        }
 
         p->class_name = (char *)calloc(1, p->class_name_size + 1);
         p->func_name = (char *)calloc(1, p->func_name_size + 1);
@@ -266,50 +322,58 @@ bool LoadRawPatchFile(PatchFile *pf, const char *filename) {
         p->desc = (char *)calloc(1, p->desc_size + 1);
         p->bytecode = (char *)calloc(1, p->bytecode_size + 1);
 
-        fread(p->class_name,  sizeof(char), p->class_name_size, f);
-        fread(p->method_name, sizeof(char), p->method_name_size, f);
-        fread(p->func_name,   sizeof(char), p->func_name_size, f);
-        fread(p->type,        sizeof(char), p->type_size, f);
-        fread(p->name,        sizeof(char), p->name_size, f);
-        fread(p->desc,        sizeof(char), p->desc_size, f);
-        fread(p->bytecode,    sizeof(char), p->bytecode_size, f);
+        fread_string_check(p->class_name);
+        fread_string_check(p->method_name);
+        fread_string_check(p->func_name);
+        fread_string_check(p->type);
+        fread_string_check(p->name);
+        fread_string_check(p->desc);
+        fread_string_check(p->bytecode);
     }
-    return true;
+    fclose(f);
+
+    MAKE_PATCH_ERROR(patch_ok);
 }
 
-bool DumpRawPatchFile(std::vector<Patch *> patches, const char *filename) {
+PatchError DumpRawPatchFile(std::vector<Patch *> patches, const char *filename) {
     FILE *f = fopen(filename, "wb");
     if (f == NULL) {
-        return false;
+        MAKE_PATCH_ERROR(patch_file_error);
     }
 
     uint32_t c = patches.size();
 
-    fwrite(LIVEUPDATEMAGIC, strlen(LIVEUPDATEMAGIC), 1, f);
-    fwrite(&c, sizeof(uint32_t), 1, f);
+    if (fwrite(LIVEUPDATEMAGIC, 1, strlen(LIVEUPDATEMAGIC), f) < strlen(LIVEUPDATEMAGIC)) {
+        MAKE_PATCH_ERROR(patch_file_error);
+    }
+
+    if (fwrite(&c, 1, sizeof(uint32_t), f) < sizeof(uint32_t)) {
+        MAKE_PATCH_ERROR(patch_file_error);
+    }
 
     for (uint32_t i = 0; i < c; i++) {
         Patch *p = patches[i];
 
-        p->class_name_size = strlen(p->class_name);
-        p->method_name_size = strlen(p->method_name);
-        p->func_name_size = strlen(p->func_name);
-        p->type_size = strlen(p->type);
-        p->name_size = strlen(p->name);
-        p->desc_size = strlen(p->desc);
+        strlen_write_size(p->class_name);
+        strlen_write_size(p->method_name);
+        strlen_write_size(p->func_name);
+        strlen_write_size(p->type);
+        strlen_write_size(p->name);
+        strlen_write_size(p->desc);
 
         // Write the first 7 entries containing the sizes of all of the strings
-        fwrite(p,              sizeof(uint32_t), 7, f);
-        fwrite(p->class_name,  sizeof(char), p->class_name_size, f);
-        fwrite(p->method_name, sizeof(char), p->method_name_size, f);
-        fwrite(p->func_name,   sizeof(char), p->func_name_size, f);
-        fwrite(p->type,        sizeof(char), p->type_size, f);
-        fwrite(p->name,        sizeof(char), p->name_size, f);
-        fwrite(p->desc,        sizeof(char), p->desc_size, f);
-        fwrite(p->bytecode,    sizeof(char), p->bytecode_size, f);
+        if (fwrite(p,              sizeof(uint32_t), 7, f) < 7) {
+            MAKE_PATCH_ERROR(patch_file_error);
+        }
+        fwrite_string_check(p->class_name);
+        fwrite_string_check(p->method_name);
+        fwrite_string_check(p->func_name);
+        fwrite_string_check(p->type);
+        fwrite_string_check(p->name);
+        fwrite_string_check(p->desc);
+        fwrite_string_check(p->bytecode);
     }
 
-    return true;
+    MAKE_PATCH_ERROR(patch_ok);
 }
-
 #pragma GCC diagnostic pop
