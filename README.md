@@ -6,9 +6,11 @@ Utility to generate liveupdates and devtools.raw for evemu.
 
 Check the [releases](https://github.com/THUNDERGROOVE/evegen/releases/)
 
-`./configure`
+```
+./configure
 
-`make`
+make
+```
 
 I wouldn't recommend `make install` without a prefix.
 
@@ -31,7 +33,7 @@ Patch files essentially overwrite specific functions in the EVE client.
 
 The simplest example is the patch for disable the tutorials.
 
-`
+```
 #@liveupdate("globalClassMethod", svc.tutorial::TutorialSvc", "GetTutorials")
 #@patchinfo("GetTutorials", Disable tutorials whenever accessed.  They cause issues")
 
@@ -41,7 +43,7 @@ def GetTutorials(self):
     __builtin__.settings.Get("Char").Set("ui", "showTutorials", 0)
     eve.Message("CustomNotify", {"notify": "Tutorials disabled!"})
     return {}
-`
+```
 
 You can see the decorator like annotations at the beginging of the file.  They can exist anywhere in the file but it's good practice to leave them in the begining.
 
