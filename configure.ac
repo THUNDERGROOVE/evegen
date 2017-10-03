@@ -1,6 +1,8 @@
 #AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS], [TAR-NAME], [URL])
 AC_INIT([evegen], [0.2.1], [nick@maximumtwang.com], [evegen], [http://www.maximumtwang.com])
 
+AM_SILENT_RULES([yes])
+
 # Force autoconf to be at least this version number.
 AC_PREREQ([2.68])
 

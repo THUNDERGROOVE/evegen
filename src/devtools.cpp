@@ -6,6 +6,7 @@
 
 // WIP may never finish
 bool MakeDevtoolsNoScript(const char *devtools_file) {
+    /*
     //PyObject *main = PyImport_AddModule("__main__");
     
     PyObject *globals = PyDict_New();
@@ -27,6 +28,7 @@ bool MakeDevtoolsNoScript(const char *devtools_file) {
     Py_ssize_t size = PyTuple_Size(co_consts_tuple);
     size = 0;
     //PyObject *co_consts = PyList_New(size);
+    */
 
     return true;
 }

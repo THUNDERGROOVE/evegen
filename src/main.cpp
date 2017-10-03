@@ -108,8 +108,9 @@ int main(int argc, char **argv) {
         if (err.err != patch_ok) {
             printf("Error dumping patch file: %s\n", PatchErrorString(err));
             printf("At line %u\n", err.line);
+            return -1;
         }
-        printf(" OK | Dumped %d types to updates.lu\n", patches.size());
+        printf(" OK | Dumped %lu types to updates.lu\n", patches.size());
     }
 
     if (do_devtools) {
