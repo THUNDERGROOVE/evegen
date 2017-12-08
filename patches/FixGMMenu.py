@@ -20,9 +20,8 @@ def GetGMMenu(self, itemID = None, slimItem = None, charID = None, invItem = Non
     gm.append(("Open Dev Window", form.DevWindow.Open, ()))
     gm.append(("Open Console (don't do it)", startConsole, ()))
     if mapItem and not slimItem:
-       #gm.append(('TR me here!', sm.RemoteSvc('slash').SlashCmd, ('/tr me ' + str(mapItem.itemID),)))
-        eve.Message("CustomNotify", {"notify": "Teleporting to: " + str(mapItem.itemID)})
-        gm.append(("TR me here!", sm.GetService("LSC").LocalEchoAll, (".tr " + str(mapItem.itemID),), eve.session.charid))
+        gm.append(('TR me here!', sm.RemoteSvc('slash').SlashCmd, ('/tr me ' + str(mapItem.itemID),)))
+        #eve.Message("CustomNotify", {"notify": "Teleporting to: " + str(mapItem.itemID)})
         gm.append(None)
     elif charID:
         gm.append(('TR me to %s' % cfg.eveowners.Get(charID).name, sm.RemoteSvc('slash').SlashCmd, ('/tr me ' + str(charID),)))

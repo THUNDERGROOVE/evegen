@@ -36,10 +36,14 @@ AC_CONFIG_HEADERS([config.h])
 # Check for libraries, headers, data etc here.
 
 #AC_CHECK_LIB([python2.7], [Py_Initialize], [], [AC_MSG_ERROR([Python 2.7 was not found])])
-AM_PATH_PYTHON(,[PYTHON_FOUND=true],[PYTHON_FOUND=false])
+AM_PATH_PYTHON([2.7],[PYTHON_FOUND=true],[PYTHON_FOUND=false])
+
 PYTHON_CPPFLAGS=
 PYTHON_LDFLAGS=
 AX_PYTHON_DEVEL
+
+LIBPYTHON="python$PYTHON_VERSION"
+LDFLAGS="$LDFLAGS -l$LIBPYTHON"
 
 WITH_MYSQL()
 MYSQL_USE_CLIENT_API()
