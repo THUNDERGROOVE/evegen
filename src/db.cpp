@@ -2,7 +2,7 @@
 
 #include "patch.h"
 
-#include <my_global.h>
+//#include <my_global.h>
 #include <mysql.h>
 
 MYSQL *con = NULL;

@@ -5,7 +5,9 @@
 
 #include "patch.h"
 #include "devtools.h"
-#include "config.h"
+//#include "config.h"
+#define PACKAGE "evegen"
+#define PACKAGE_VERSION "1.0"
 #include "db.h"
 
 bool do_devtools = false;
