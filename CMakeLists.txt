@@ -20,7 +20,7 @@ add_executable(evegen
         src/stb_c_lexer.h)
 
 target_include_directories(evegen PRIVATE ${Python_INCLUDE_DIRS} ${MariaDBClient_INCLUDE_DIR})
-target_link_libraries(evegen ${Python_LIBRARIES} ${MariaDBClient_LIBRARIES}
+target_link_libraries(evegen ${Python_LIBRARIES} ${MariaDBClient_LIBRARIES})
 
 if (EXISTS "${Python_INCLUDE_DIRS}/Stackless")
     message(STATUS "Stackless Python installation detected, making include corrections")
